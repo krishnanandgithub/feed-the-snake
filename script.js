@@ -48,7 +48,7 @@ const moveVertical = (key, arrows, interval, snake, position, value) => {
   arrows.add(key);
   closeInterval(interval);
   const id = setInterval(() => {
-    snake.style.setProperty("--top", position.top(value));
+    snake.resetProperty("top", position.top(value));
   }, 200);
   interval.add(id);
 };
@@ -65,7 +65,7 @@ const moveHorizontal = (
   arrows.add(key);
   closeInterval(interval);
   const id = setInterval(() => {
-    snake.style.setProperty("--left", position.left(value));
+    snake.resetProperty("left", position.left(value));
   }, 200);
   interval.add(id);
 };
@@ -94,19 +94,11 @@ const createContainer = (height) => {
   const body = document.querySelector("body");
   const container = document.createElement("div");
   container.classList.add("box");
-  container.style.setProperty("--height", `${height}px`);
+  container.style.setProperty("height", `${height}px`);
 
   body.appendChild(container);
 
   return container;
-};
-
-const createSnake = (container) => {
-  const snake = document.createElement("div");
-  snake.classList.add("snake");
-  container.appendChild(snake);
-
-  return snake;
 };
 
 const multipleOf = (num) => {
@@ -117,22 +109,41 @@ const createFood = () => {
   const container = document.querySelector(".box");
   const food = document.createElement("div");
   food.classList.add("food");
-  const top = `${multipleOf(20)}px`;
-  const left = `${multipleOf(20)}px`;
-  food.style.setProperty("--foodTop", top);
-  food.style.setProperty("--foodLeft", left);
+  food.style.setProperty("top", `${multipleOf(20)}px`);
+  food.style.setProperty("left", `${multipleOf(20)}px`);
   container.appendChild(food);
 
   return food;
 };
 
+class Snake {
+  #snakeBody;
+  constructor(container) {
+    this.#snakeBody = document.createElement("div");
+    this.#snakeBody.classList.add("bodyOfSnake");
+    container.appendChild(this.#snakeBody);
+  }
+
+  resetProperty(property, value) {
+    this.#snakeBody.style.setProperty(property, value);
+  }
+
+  enlargeSnake() {
+    const snake = document.createElement("div");
+    snake.classList.add("snake");
+    this.#snakeBody.appendChild(snake);
+  }
+}
+
 const main = () => {
   const container = createContainer(400);
-  const snake = createSnake(container);
+  const snake = new Snake(container);
+  snake.enlargeSnake();
+  snake.enlargeSnake();
   const position = new Position(-20, 380, -20, 380);
   const intervals = new Set();
   const arrows = new Set();
-  const food = createFood(container);
+  createFood(container);
 
   document.addEventListener("keydown", (event) => {
     handleMovement(event, snake, position, intervals, arrows);
