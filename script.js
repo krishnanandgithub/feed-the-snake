@@ -35,6 +35,105 @@ class Position {
     this.#left += increment;
     return this.#left + "px";
   }
+
+  increment(property, value) {
+    if (property === "top") {
+      return this.top(value);
+    }
+
+    return this.left(value);
+  }
+}
+
+class Food {
+  #container;
+  #top;
+  #left;
+  constructor(container) {
+    this.#container = container;
+    this.createFood();
+  }
+
+  multipleOf = (num) => {
+    return num * Math.floor(Math.random() * num);
+  };
+
+  createFood() {
+    const food = document.createElement("div");
+    food.classList.add("food");
+    this.#top = this.multipleOf(20);
+    this.#left = this.multipleOf(20);
+    food.style.setProperty("top", `${this.#top}px`);
+    food.style.setProperty("left", `${this.#left}px`);
+    this.#container.appendChild(food);
+  }
+
+  top() {
+    return this.#top;
+  }
+
+  left() {
+    return this.#left;
+  }
+
+  removeFood() {
+    const food = document.querySelector(".food");
+    this.#container.removeChild(food);
+  }
+}
+
+class Snake {
+  #snakeIds;
+  #idCounter;
+  #container;
+  #top;
+  #left;
+  constructor(container) {
+    this.#container = container;
+    this.#snakeIds = [];
+    this.#idCounter = 1;
+    this.enlargeSnake(0, 0);
+  }
+
+  parseValue(value) {
+    return +value.slice(0, -2);
+  }
+
+  setPosition(property, value) {
+    if (property === "top") {
+      this.#top = this.parseValue(value);
+      return;
+    }
+
+    this.#left = this.parseValue(value);
+  }
+
+  resetProperty(property, value) {
+    this.setPosition(property, value);
+    let propValue = value;
+    for (const id of this.#snakeIds) {
+      const element = document.getElementById(id);
+      element.style.setProperty(property, propValue);
+      propValue -= 20;
+    }
+  }
+
+  enlargeSnake(top, left) {
+    this.#top = top;
+    this.#left = left;
+    const snake = document.createElement("div");
+    snake.id = this.#idCounter;
+    this.#snakeIds.unshift(this.#idCounter);
+    snake.classList.add("snake");
+    snake.style.setProperty("top", `${top}px`);
+    snake.style.setProperty("left", `${left}px`);
+    this.#container.appendChild(snake);
+    this.#idCounter += 1;
+  }
+
+  isFoodFound(top, left) {
+    return this.#top === top && this.#left === left;
+  }
 }
 
 const closeInterval = (interval) => {
@@ -43,50 +142,47 @@ const closeInterval = (interval) => {
   }
 };
 
-const moveVertical = (key, arrows, interval, snake, position, value) => {
-  arrows.clear();
-  arrows.add(key);
-  closeInterval(interval);
-  const id = setInterval(() => {
-    snake.resetProperty("top", position.top(value));
-  }, 200);
-  interval.add(id);
-};
-
-const moveHorizontal = (
+const move = (
   key,
   arrows,
   interval,
   snake,
+  food,
   position,
+  property,
   value,
 ) => {
   arrows.clear();
   arrows.add(key);
   closeInterval(interval);
   const id = setInterval(() => {
-    snake.resetProperty("left", position.left(value));
+    if (snake.isFoodFound(food.top(), food.left())) {
+      food.removeFood();
+      snake.enlargeSnake(food.top(), food.left());
+      food.createFood();
+    }
+    snake.resetProperty(property, position.increment(property, value));
   }, 200);
   interval.add(id);
 };
 
-const handleMovement = (event, snake, position, interval, arrows) => {
+const handleMovement = (event, snake, food, position, interval, arrows) => {
   const key = event.key;
 
   if (key === "ArrowDown" && !arrows.has("ArrowUp")) {
-    moveVertical(key, arrows, interval, snake, position, 20);
+    move(key, arrows, interval, snake, food, position, "top", 20);
   }
 
   if (key === "ArrowUp" && !arrows.has("ArrowDown")) {
-    moveVertical(key, arrows, interval, snake, position, -20);
+    move(key, arrows, interval, snake, food, position, "top", -20);
   }
 
   if (key === "ArrowRight" && !arrows.has("ArrowLeft")) {
-    moveHorizontal(key, arrows, interval, snake, position, 20);
+    move(key, arrows, interval, snake, food, position, "left", 20);
   }
 
   if (key === "ArrowLeft" && !arrows.has("ArrowRight")) {
-    moveHorizontal(key, arrows, interval, snake, position, -20);
+    move(key, arrows, interval, snake, food, position, "left", -20);
   }
 };
 
@@ -101,53 +197,17 @@ const createContainer = (height) => {
   return container;
 };
 
-const multipleOf = (num) => {
-  return num * Math.floor(Math.random() * num);
-};
-
-const createFood = () => {
-  const container = document.querySelector(".box");
-  const food = document.createElement("div");
-  food.classList.add("food");
-  food.style.setProperty("top", `${multipleOf(20)}px`);
-  food.style.setProperty("left", `${multipleOf(20)}px`);
-  container.appendChild(food);
-
-  return food;
-};
-
-class Snake {
-  #snakeBody;
-  constructor(container) {
-    this.#snakeBody = document.createElement("div");
-    this.#snakeBody.classList.add("bodyOfSnake");
-    container.appendChild(this.#snakeBody);
-  }
-
-  resetProperty(property, value) {
-    this.#snakeBody.style.setProperty(property, value);
-  }
-
-  enlargeSnake() {
-    const snake = document.createElement("div");
-    snake.classList.add("snake");
-    this.#snakeBody.appendChild(snake);
-  }
-}
-
 const main = () => {
   const container = createContainer(400);
   const snake = new Snake(container);
-  snake.enlargeSnake();
-  snake.enlargeSnake();
+  const food = new Food(container);
   const position = new Position(-20, 380, -20, 380);
   const intervals = new Set();
   const arrows = new Set();
-  createFood(container);
 
   document.addEventListener("keydown", (event) => {
-    handleMovement(event, snake, position, intervals, arrows);
+    handleMovement(event, snake, food, position, intervals, arrows);
   });
 };
 
-window.onload = main;
+main();
