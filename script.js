@@ -11,12 +11,10 @@ class Position {
   }
 
   top(increment) {
-    if (this.#top >= this.#maxTop) {
-      this.#top = 0;
-    }
-
-    if (this.#top < 0) {
-      this.#top = this.#maxTop;
+    if (this.#top === this.#maxTop && increment > 0) {
+      this.#top = -20;
+    } else if (this.#top === 0 && increment < 0) {
+      this.#top = this.#maxTop + 20;
     }
 
     this.#top += increment;
@@ -24,12 +22,10 @@ class Position {
   }
 
   left(increment) {
-    if (this.#left >= this.#maxLeft) {
-      this.#left = 0;
-    }
-
-    if (this.#left < 0) {
-      this.#left = this.#maxLeft;
+    if (this.#left === this.#maxLeft && increment > 0) {
+      this.#left = -20;
+    } else if (this.#left === 0 && increment < 0) {
+      this.#left = this.#maxLeft + 20;
     }
 
     this.#left += increment;
@@ -148,7 +144,7 @@ class Score {
   }
 
   displayScore() {
-    const score = document.querySelector("h1");
+    const score = document.getElementById("score");
     score.textContent = `
     Score : ${10 * this.#score}
     `;
