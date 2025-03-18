@@ -36,7 +36,7 @@ body {
   aspect-ratio: 1;
   position: absolute;
   border: 1px solid white;
-  background-color: red;
+  background-color:orange;
 }
 
 .score-board {
