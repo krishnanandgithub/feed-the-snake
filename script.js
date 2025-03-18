@@ -110,17 +110,21 @@ class Snake {
 
   resetProperty(property, value) {
     this.setPosition(property, value);
-    let propValue = value;
+    let top = this.#top + "px";
+    let left = this.#left + "px";
+
     for (const id of this.#snakeIds) {
       const element = document.getElementById(id);
-      element.style.setProperty(property, propValue);
-      propValue -= 20;
+      const tempTop = element.style.top;
+      const tempLeft = element.style.left;
+      element.style.setProperty("top", top);
+      element.style.setProperty("left", left);
+      top = tempTop;
+      left = tempLeft;
     }
   }
 
   enlargeSnake(top, left) {
-    this.#top = top;
-    this.#left = left;
     const snake = document.createElement("div");
     snake.id = this.#idCounter;
     this.#snakeIds.unshift(this.#idCounter);
@@ -136,6 +140,22 @@ class Snake {
   }
 }
 
+class Score {
+  #score;
+  constructor() {
+    this.#score = 0;
+    this.displayScore();
+  }
+
+  displayScore() {
+    const score = document.querySelector("h1");
+    score.textContent = `
+    Score : ${10 * this.#score}
+    `;
+    this.#score += 1;
+  }
+}
+
 const closeInterval = (interval) => {
   for (const id of interval) {
     clearInterval(id);
@@ -148,6 +168,7 @@ const move = (
   interval,
   snake,
   food,
+  score,
   position,
   property,
   value,
@@ -160,53 +181,52 @@ const move = (
       food.removeFood();
       snake.enlargeSnake(food.top(), food.left());
       food.createFood();
+      score.displayScore();
     }
     snake.resetProperty(property, position.increment(property, value));
   }, 200);
   interval.add(id);
 };
 
-const handleMovement = (event, snake, food, position, interval, arrows) => {
+const handleMovement = (
+  event,
+  snake,
+  food,
+  score,
+  position,
+  interval,
+  arrows,
+) => {
   const key = event.key;
 
   if (key === "ArrowDown" && !arrows.has("ArrowUp")) {
-    move(key, arrows, interval, snake, food, position, "top", 20);
+    move(key, arrows, interval, snake, food, score, position, "top", 20);
   }
 
   if (key === "ArrowUp" && !arrows.has("ArrowDown")) {
-    move(key, arrows, interval, snake, food, position, "top", -20);
+    move(key, arrows, interval, snake, food, score, position, "top", -20);
   }
 
   if (key === "ArrowRight" && !arrows.has("ArrowLeft")) {
-    move(key, arrows, interval, snake, food, position, "left", 20);
+    move(key, arrows, interval, snake, food, score, position, "left", 20);
   }
 
   if (key === "ArrowLeft" && !arrows.has("ArrowRight")) {
-    move(key, arrows, interval, snake, food, position, "left", -20);
+    move(key, arrows, interval, snake, food, score, position, "left", -20);
   }
 };
 
-const createContainer = (height) => {
-  const body = document.querySelector("body");
-  const container = document.createElement("div");
-  container.classList.add("box");
-  container.style.setProperty("height", `${height}px`);
-
-  body.appendChild(container);
-
-  return container;
-};
-
 const main = () => {
-  const container = createContainer(400);
+  const container = document.querySelector(".box");
   const snake = new Snake(container);
   const food = new Food(container);
-  const position = new Position(-20, 380, -20, 380);
+  const score = new Score();
+  const position = new Position(20, 380, 20, 380);
   const intervals = new Set();
   const arrows = new Set();
 
   document.addEventListener("keydown", (event) => {
-    handleMovement(event, snake, food, position, intervals, arrows);
+    handleMovement(event, snake, food, score, position, intervals, arrows);
   });
 };
 
