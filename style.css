@@ -18,7 +18,7 @@ body {
   height: 400px;
   aspect-ratio: 1;
   position: relative;
-  border: 1px solid lime;
+  border: 2px solid #f4d363;
   box-sizing: content-box;
   box-shadow: 5px 5px 25px rgb(0, 0, 0, 0.2);
 }
